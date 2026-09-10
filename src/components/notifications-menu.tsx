@@ -59,7 +59,7 @@ export function NotificationsMenu() {
 						<DropdownMenuItem
 							className={cn(
 								"flex cursor-pointer items-start gap-3 px-4 py-3",
-								notification.unread && "bg-blue-50/60 dark:bg-blue-400/10"
+								notification.unread && "bg-sidebar-accent"
 							)}
 							key={notification.id}
 							onSelect={() => markRead(notification.id)}
