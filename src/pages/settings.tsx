@@ -1,6 +1,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/page-header";
+import { securityFormSchema } from "@/lib/validators";
 import { Button } from "@/components/ui/button";
 import {
 	Card,
@@ -168,33 +170,39 @@ function SecurityCard() {
 	const [confirmPassword, setConfirmPassword] = useState("");
 	const [twoFactor, setTwoFactor] = useState(false);
 
-	const [error, setError] = useState<string | null>(null);
-	const [updated, setUpdated] = useState(false);
+	type SecurityField = "currentPassword" | "newPassword" | "confirmPassword";
+	const [errors, setErrors] = useState<Partial<Record<SecurityField, string>>>({});
 
 	const handlePasswordChange = (event: FormEvent) => {
 		event.preventDefault();
-		setError(null);
-		setUpdated(false);
 
-		if (newPassword.length < 8) {
-			setError("New password must be at least 8 characters.");
+		const parsed = securityFormSchema.safeParse({
+			currentPassword,
+			newPassword,
+			confirmPassword,
+		});
+		if (!parsed.success) {
+			const flattened = parsed.error.flatten().fieldErrors;
+			setErrors({
+				currentPassword: flattened.currentPassword?.[0],
+				newPassword: flattened.newPassword?.[0],
+				confirmPassword: flattened.confirmPassword?.[0],
+			});
+			toast.error("Please fix the highlighted fields.", {
+				description: Object.values(flattened).flat()[0],
+			});
 			return;
 		}
-		if (newPassword !== confirmPassword) {
-			setError("New passwords do not match.");
-			return;
-		}
-		if (newPassword === currentPassword) {
-			setError("New password must be different from the current password.");
-			return;
-		}
+
+		setErrors({});
 
 		// Demo only — replace with a real API call to change the password.
 		setCurrentPassword("");
 		setNewPassword("");
 		setConfirmPassword("");
-		setUpdated(true);
-		window.setTimeout(() => setUpdated(false), 2500);
+		toast.success("Password updated", {
+			description: "Use your new password the next time you sign in.",
+		});
 	};
 
 	return (
@@ -219,6 +227,7 @@ function SecurityCard() {
 						<div className="space-y-2">
 							<Label htmlFor="settings-current-password">Current</Label>
 							<Input
+								aria-invalid={Boolean(errors.currentPassword)}
 								id="settings-current-password"
 								type="password"
 								value={currentPassword}
@@ -226,10 +235,14 @@ function SecurityCard() {
 								autoComplete="current-password"
 								required
 							/>
+							{errors.currentPassword && (
+								<p className="text-destructive text-xs">{errors.currentPassword}</p>
+							)}
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="settings-new-password">New</Label>
 							<Input
+								aria-invalid={Boolean(errors.newPassword)}
 								id="settings-new-password"
 								type="password"
 								value={newPassword}
@@ -237,10 +250,14 @@ function SecurityCard() {
 								autoComplete="new-password"
 								required
 							/>
+							{errors.newPassword && (
+								<p className="text-destructive text-xs">{errors.newPassword}</p>
+							)}
 						</div>
 						<div className="space-y-2">
 							<Label htmlFor="settings-confirm-password">Confirm new</Label>
 							<Input
+								aria-invalid={Boolean(errors.confirmPassword)}
 								id="settings-confirm-password"
 								type="password"
 								value={confirmPassword}
@@ -248,15 +265,11 @@ function SecurityCard() {
 								autoComplete="new-password"
 								required
 							/>
+							{errors.confirmPassword && (
+								<p className="text-destructive text-xs">{errors.confirmPassword}</p>
+							)}
 						</div>
 					</div>
-					{error && <p className="text-destructive text-sm">{error}</p>}
-					{updated && (
-						<p className="flex items-center gap-1 text-sm">
-							<CheckIcon className="size-3.5" />
-							Password updated.
-						</p>
-					)}
 					<div className="flex justify-end">
 						<Button size="sm" type="submit" variant="outline">
 							Update password

@@ -190,8 +190,8 @@ export function ServerDataTable<T extends Record<string, unknown>>({
         [rowsPerPage]
     );
 
-    const showSkeletons = isLoading && !hasLoadedOnce.current;
-    const isRefetching = isLoading && hasLoadedOnce.current;
+    const showSkeletons = isLoading && !hasLoadedOnce;
+    const isRefetching = isLoading && hasLoadedOnce;
 
     return (
         <div className={cn("flex min-h-0 flex-col gap-4", className)}>
