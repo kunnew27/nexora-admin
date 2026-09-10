@@ -63,7 +63,10 @@ export default function SettingsPage() {
 				</div>
 			</nav>
 
-			<div className="min-h-0 flex-1 overflow-y-auto py-6">
+			{/* Negative margin + matching padding keeps the card aligned with the
+			    heading above while moving the overflow clip edge off the card border,
+			    so the rounded corners don't get cut off. */}
+			<div className="-mx-4 min-h-0 flex-1 overflow-y-auto px-4 py-6 md:-mx-6 md:px-6">
 				<div className="w-full max-w-2xl space-y-6">
 					{tab === "profile" && <ProfileCard />}
 					{tab === "security" && <SecurityCard />}

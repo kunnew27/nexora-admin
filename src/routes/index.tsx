@@ -11,6 +11,8 @@ import SettingsPage from "@/pages/settings";
 import ActivityPage from "@/pages/activity";
 import UsersPage from "@/pages/users";
 import BillingPage from "@/pages/billing";
+import ImageViewerPage from "@/pages/image-viewer";
+import NumberInputPage from "@/pages/number-input";
 import LoginPage from "@/pages/auth/login";
 import NotFoundPage from "@/pages/not-found";
 
@@ -29,6 +31,8 @@ export const router = createBrowserRouter([
       { path: "settings", element: <SettingsPage /> },
       { path: "activity", element: <ActivityPage /> },
       { path: "billing", element: <BillingPage /> },
+      { path: "image-viewer", element: <ImageViewerPage /> },
+      { path: "number-input", element: <NumberInputPage /> },
     ],
   },
   {

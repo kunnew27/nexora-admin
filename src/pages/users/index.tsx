@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUsersStore } from "@/stores/users-store";
 import type { AppUser, UserStatus } from "@/stores/users-store";
-import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { PencilIcon, PlusIcon, Trash2Icon, TriangleAlertIcon } from "lucide-react";
 
 const statusVariant: Record<UserStatus, "secondary" | "outline" | "destructive"> = {
 	Active: "secondary",
@@ -152,7 +152,7 @@ export default function UsersPage() {
 				<AlertDialogContent>
 					<AlertDialogHeader>
 						<AlertDialogMedia className="bg-destructive/10 text-destructive">
-							<Trash2Icon />
+							<TriangleAlertIcon />
 						</AlertDialogMedia>
 						<AlertDialogTitle>Delete {deleteTarget?.name}?</AlertDialogTitle>
 						<AlertDialogDescription>

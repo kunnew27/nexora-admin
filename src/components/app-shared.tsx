@@ -1,4 +1,4 @@
-import { LayoutGridIcon, BarChart3Icon, BriefcaseIcon, UsersIcon, UserRoundIcon, PlugIcon, KeyRoundIcon, SettingsIcon, ActivityIcon, HelpCircleIcon, BookOpenIcon } from "lucide-react";
+import { LayoutGridIcon, BarChart3Icon, BriefcaseIcon, UsersIcon, UserRoundIcon, PlugIcon, KeyRoundIcon, SettingsIcon, ActivityIcon, HelpCircleIcon, BookOpenIcon, ImageIcon, HashIcon } from "lucide-react";
 
 export type SidebarNavItem = {
 	title: string;
@@ -69,6 +69,22 @@ export const navGroups: SidebarNavGroup[] = [
 				url: "/api-keys",
 				icon: (
 					<KeyRoundIcon
+					/>
+				),
+			},
+			{
+				title: "Image Viewer",
+				url: "/image-viewer",
+				icon: (
+					<ImageIcon
+					/>
+				),
+			},
+			{
+				title: "Number Input",
+				url: "/number-input",
+				icon: (
+					<HashIcon
 					/>
 				),
 			},
