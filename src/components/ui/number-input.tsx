@@ -1,7 +1,13 @@
 import * as React from "react"
-import { MinusIcon, PlusIcon } from "lucide-react"
-import { cn } from "cn"
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  MinusIcon,
+  PlusIcon,
+  type LucideIcon,
+} from "lucide-react"
 
+import { cn } from "cn"
 import { Input } from "@/components/ui/input"
 import {
   InputGroup,
@@ -11,6 +17,12 @@ import {
   InputGroupText,
 } from "@/components/ui/input-group"
 import { toLatinDigits } from "@/lib/khr"
+
+/* -------------------------------------------------------------------------- */
+/*                                   types                                    */
+/* -------------------------------------------------------------------------- */
+
+type StepperVariant = "stacked" | "split"
 
 type NumberInputProps = Omit<
   React.ComponentProps<"input">,
@@ -32,9 +44,26 @@ type NumberInputProps = Omit<
   prefix?: string
   suffix?: string
   showSteppers?: boolean
+  /**
+   * `"stacked"` = compact chevron column at the trailing edge (default).
+   * `"split"` = `−` and `+` on either side of a centred value (touch friendly).
+   */
+  stepperVariant?: StepperVariant
   /** Transform the value when the field loses focus (e.g. cash rounding). */
   normalizeOnBlur?: (value: number) => number
 }
+
+type Config = {
+  group: string
+  decimal: string
+  locale: string
+  allowNegative: boolean
+  decimalScale?: number
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             number formatting                              */
+/* -------------------------------------------------------------------------- */
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
@@ -48,26 +77,17 @@ function getSeparators(locale: string) {
   }
 }
 
-type Config = {
-  group: string
-  decimal: string
-  locale: string
-  allowNegative: boolean
-  decimalScale?: number
-}
-
-/** Strip formatting down to `-`, digits and at most one decimal separator. */
 function isDecimalDigit(char: string) {
   return (char >= "0" && char <= "9") || (char >= "\u17E0" && char <= "\u17E9")
 }
 
+/** Strip formatting down to `-`, digits and at most one decimal separator. */
 function sanitize(input: string, config: Config) {
   const { group, decimal, allowNegative, decimalScale } = config
   const normalized = toLatinDigits(input)
-
   const isNegative = allowNegative && /^\s*-/.test(normalized)
-  let body = normalized.split(group).join("").replace(/\s/g, "")
 
+  let body = normalized.split(group).join("").replace(/\s/g, "")
   // Accept "." from the numpad even in comma-decimal locales.
   if (decimal !== ".") body = body.replace(/\./g, decimal)
   body = body.replace(new RegExp(`[^0-9${escapeRegExp(decimal)}]`, "g"), "")
@@ -146,8 +166,7 @@ function caretForDigitIndex(formatted: string, digitIndex: number) {
   }
   let seen = 0
   for (let i = 0; i < formatted.length; i += 1) {
-    const char = formatted[i]
-    if (isDecimalDigit(char)) {
+    if (isDecimalDigit(formatted[i])) {
       seen += 1
       if (seen === digitIndex) return i + 1
     }
@@ -162,6 +181,67 @@ function clamp(value: number, min?: number, max?: number) {
   return next
 }
 
+function decimalPlaces(value: number) {
+  const text = String(Math.abs(value))
+  if (text.includes("e")) return 12
+  const dot = text.indexOf(".")
+  return dot === -1 ? 0 : text.length - dot - 1
+}
+
+/** Kill float noise, e.g. 0.1 + 0.2 -> 0.30000000000000004. */
+function snap(value: number, places: number) {
+  return Number(value.toFixed(Math.min(Math.max(places, 0), 12)))
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                  stepper                                   */
+/* -------------------------------------------------------------------------- */
+
+type StepperButtonProps = {
+  className?: string
+  disabled?: boolean
+  icon: LucideIcon
+  label: string
+  onFocusInput: () => void
+  onStep: () => void
+}
+
+function StepperButton({
+  className,
+  disabled,
+  icon: Icon,
+  label,
+  onFocusInput,
+  onStep,
+}: StepperButtonProps) {
+  return (
+    <InputGroupButton
+      aria-label={label}
+      className={cn(
+        "flex size-auto min-h-0 w-full shrink-0 items-center justify-center rounded-none border-0 p-0 text-muted-foreground shadow-none ring-0 transition-colors hover:bg-accent hover:text-foreground focus-visible:border-0 focus-visible:ring-0 active:translate-y-0 active:bg-accent/70 disabled:pointer-events-none disabled:opacity-40",
+        className
+      )}
+      disabled={disabled}
+      onClick={onStep}
+      onMouseDown={(event) => {
+        // Keep the caret in the field. Blurring here would run
+        // normalizeOnBlur on every single click.
+        event.preventDefault()
+        onFocusInput()
+      }}
+      size="xs"
+      tabIndex={-1}
+      type="button"
+    >
+      <Icon aria-hidden />
+    </InputGroupButton>
+  )
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                 component                                  */
+/* -------------------------------------------------------------------------- */
+
 function NumberInput({
   value,
   defaultValue,
@@ -175,9 +255,11 @@ function NumberInput({
   prefix,
   suffix,
   showSteppers = false,
+  stepperVariant = "stacked",
   normalizeOnBlur,
   className,
   disabled,
+  readOnly,
   onBlur,
   onKeyDown,
   ...props
@@ -190,8 +272,8 @@ function NumberInput({
 
   const inputRef = React.useRef<HTMLInputElement>(null)
   const caretRef = React.useRef<number | null>(null)
-  const isControlled = value !== undefined
 
+  const isControlled = value !== undefined
   const [display, setDisplay] = React.useState(() =>
     fromNumber(isControlled ? value : defaultValue, config)
   )
@@ -214,24 +296,31 @@ function NumberInput({
     }
   }, [value, isControlled, config, display])
 
-  const commit = React.useCallback((nextDisplay: string, caret: number | null) => {
-    const element = inputRef.current
-    caretRef.current = caret
-    if (element) {
-      element.value = nextDisplay
-      if (caret != null) element.setSelectionRange(caret, caret)
-    }
-    setDisplay(nextDisplay)
+  const commit = React.useCallback(
+    (nextDisplay: string, caret: number | null) => {
+      const element = inputRef.current
+      caretRef.current = caret
+      if (element) {
+        element.value = nextDisplay
+        if (caret != null) element.setSelectionRange(caret, caret)
+      }
+      setDisplay(nextDisplay)
+    },
+    []
+  )
+
+  const focusInput = React.useCallback(() => {
+    inputRef.current?.focus()
   }, [])
+
+  const parsed = toNumber(sanitize(display, config), config.decimal)
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value
     const selection = event.target.selectionStart ?? raw.length
     const digitsBeforeCaret = countDigits(raw.slice(0, selection))
-
     const nextDisplay = format(sanitize(raw, config), config)
     commit(nextDisplay, caretForDigitIndex(nextDisplay, digitsBeforeCaret))
-
     onValueChange?.(toNumber(sanitize(nextDisplay, config), config.decimal))
   }
 
@@ -243,9 +332,11 @@ function NumberInput({
   }
 
   const nudge = (direction: 1 | -1) => {
-    const current =
-      toNumber(sanitize(display, config), config.decimal) ?? min ?? 0
-    applyNumber(current + direction * step)
+    if (disabled || readOnly) return
+    const current = parsed ?? min ?? 0
+    const places =
+      decimalScale ?? Math.max(decimalPlaces(step), decimalPlaces(current))
+    applyNumber(snap(current + direction * step, places))
   }
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -272,7 +363,7 @@ function NumberInput({
     if (
       event.key === "Backspace" &&
       !hasSelection &&
-      caret > 0 &&
+      caret > 1 &&
       element.value[caret - 1] === config.group
     ) {
       event.preventDefault()
@@ -286,10 +377,11 @@ function NumberInput({
   }
 
   const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
-    const parsed = toNumber(sanitize(display, config), config.decimal)
     if (parsed == null) {
-      commit("", null)
-      onValueChange?.(null)
+      if (display !== "") {
+        commit("", null)
+        onValueChange?.(null)
+      }
     } else {
       const clamped = clamp(
         normalizeOnBlur ? normalizeOnBlur(parsed) : parsed,
@@ -303,12 +395,11 @@ function NumberInput({
     onBlur?.(event)
   }
 
-  const hasAddons = Boolean(prefix || suffix || showSteppers)
-
   const inputProps = {
     ...props,
     autoComplete: "off" as const,
     disabled,
+    readOnly,
     inputMode: decimalScale === 0 ? ("numeric" as const) : ("decimal" as const),
     onBlur: handleBlur,
     onChange: handleChange,
@@ -318,59 +409,107 @@ function NumberInput({
     value: display,
   }
 
-  const steppers = showSteppers ? (
-    <InputGroupAddon align="inline-end" className="cursor-default self-stretch p-0">
-      <div className="flex h-full flex-col overflow-hidden rounded-r-[calc(var(--radius)-2px)] border-l border-input">
-        <InputGroupButton
-          aria-label="Increment"
-          className="w-7 flex-1 rounded-none border-b border-input px-0 text-muted-foreground hover:bg-muted hover:text-foreground [&_svg]:size-3"
-          disabled={disabled}
-          onClick={() => nudge(1)}
-          size="icon-xs"
-          tabIndex={-1}
-        >
-          <PlusIcon />
-        </InputGroupButton>
-        <InputGroupButton
-          aria-label="Decrement"
-          className="w-7 flex-1 rounded-none px-0 text-muted-foreground hover:bg-muted hover:text-foreground [&_svg]:size-3"
-          disabled={disabled}
-          onClick={() => nudge(-1)}
-          size="icon-xs"
-          tabIndex={-1}
-        >
-          <MinusIcon />
-        </InputGroupButton>
-      </div>
-    </InputGroupAddon>
-  ) : null
+  if (!prefix && !suffix && !showSteppers) {
+    return <Input {...inputProps} className={cn("tabular-nums", className)} />
+  }
 
-  if (!hasAddons) {
-    return (
-      <Input
-        {...inputProps}
-        className={cn("tabular-nums", className)}
-      />
-    )
+  const interactive = !disabled && !readOnly
+  const canIncrement =
+    interactive && !(max != null && parsed != null && parsed >= max)
+  const canDecrement =
+    interactive && !(min != null && parsed != null && parsed <= min)
+
+  const isSplit = showSteppers && stepperVariant === "split"
+  const stepperShared = {
+    onFocusInput: focusInput,
   }
 
   return (
     <InputGroup
-      className={className}
+      // overflow-hidden lets the group's own radius clip the flush buttons,
+      // so no rounded-r-[calc(...)] guessing is needed.
+      className={cn(showSteppers && "items-stretch overflow-hidden", className)}
       data-disabled={disabled ? true : undefined}
     >
+      {isSplit ? (
+        <InputGroupAddon
+          align="inline-start"
+          className="h-full min-h-0 cursor-default p-0 pl-0 has-[>button]:ml-0"
+        >
+          <div className="flex h-full w-9 border-r border-input">
+            <StepperButton
+              {...stepperShared}
+              className="h-full [&_svg]:size-4"
+              disabled={!canDecrement}
+              icon={MinusIcon}
+              label="Decrement"
+              onStep={() => nudge(-1)}
+            />
+          </div>
+        </InputGroupAddon>
+      ) : null}
+
       {prefix ? (
-        <InputGroupAddon>
+        <InputGroupAddon
+          align="inline-start"
+          className={isSplit ? "pr-0 pl-2.5" : undefined}
+        >
           <InputGroupText>{prefix}</InputGroupText>
         </InputGroupAddon>
       ) : null}
-      <InputGroupInput {...inputProps} className="tabular-nums" />
+
+      <InputGroupInput
+        {...inputProps}
+        className={cn("tabular-nums", isSplit && "px-2 text-center")}
+      />
+
       {suffix ? (
-        <InputGroupAddon align="inline-end">
+        <InputGroupAddon
+          align="inline-end"
+          className={isSplit ? "pr-2.5 pl-0" : "pr-2.5"}
+        >
           <InputGroupText>{suffix}</InputGroupText>
         </InputGroupAddon>
       ) : null}
-      {steppers}
+
+      {showSteppers ? (
+        <InputGroupAddon
+          align="inline-end"
+          className="h-full min-h-0 cursor-default p-0 pr-0 has-[>button]:mr-0"
+        >
+          {isSplit ? (
+            <div className="flex h-full w-9 border-l border-input">
+              <StepperButton
+                {...stepperShared}
+                className="h-full [&_svg]:size-4"
+                disabled={!canIncrement}
+                icon={PlusIcon}
+                label="Increment"
+                onStep={() => nudge(1)}
+              />
+            </div>
+          ) : (
+            <div className="flex h-full min-h-0 w-8 flex-col divide-y divide-input border-l border-input">
+              <StepperButton
+                {...stepperShared}
+                className="h-1/2 min-h-0 flex-1 basis-0 [&_svg]:size-3"
+                disabled={!canIncrement}
+                icon={ChevronUpIcon}
+                label="Increment"
+                onStep={() => nudge(1)}
+              />
+              <StepperButton
+                {...stepperShared}
+                className="h-1/2 min-h-0 flex-1 basis-0 [&_svg]:size-3"
+                disabled={!canDecrement}
+                icon={ChevronDownIcon}
+                label="Decrement"
+                onStep={() => nudge(-1)}
+              />
+            </div>
+          )}
+        </InputGroupAddon>
+      ) : null}
     </InputGroup>
   )
 }

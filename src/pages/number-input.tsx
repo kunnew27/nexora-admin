@@ -73,10 +73,26 @@ export default function NumberInputPage() {
                 min={1}
                 onValueChange={setQty}
                 showSteppers
+                stepperVariant="split"
                 value={qty}
               />
               <p className="text-muted-foreground text-xs">
-                Integers only, with steppers. Raw value: {qty ?? "null"}
+                Split − / + on both sides. Raw value: {qty ?? "null"}
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="riel-steppers">Stacked steppers</Label>
+              <NumberInput
+                decimalScale={0}
+                defaultValue={1200}
+                id="riel-steppers"
+                min={0}
+                showSteppers
+                suffix="៛"
+              />
+              <p className="text-muted-foreground text-xs">
+                Compact chevron column. Good in tables and forms.
               </p>
             </div>
 
