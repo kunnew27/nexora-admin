@@ -319,11 +319,11 @@ function NumberInput({
   }
 
   const steppers = showSteppers ? (
-    <InputGroupAddon align="inline-end">
-      <div className="flex flex-col">
+    <InputGroupAddon align="inline-end" className="cursor-default self-stretch p-0">
+      <div className="flex h-full flex-col overflow-hidden rounded-r-[calc(var(--radius)-2px)] border-l border-input">
         <InputGroupButton
           aria-label="Increment"
-          className="h-3.5 w-6 rounded-b-none"
+          className="w-7 flex-1 rounded-none border-b border-input px-0 text-muted-foreground hover:bg-muted hover:text-foreground [&_svg]:size-3"
           disabled={disabled}
           onClick={() => nudge(1)}
           size="icon-xs"
@@ -333,7 +333,7 @@ function NumberInput({
         </InputGroupButton>
         <InputGroupButton
           aria-label="Decrement"
-          className="h-3.5 w-6 rounded-t-none"
+          className="w-7 flex-1 rounded-none px-0 text-muted-foreground hover:bg-muted hover:text-foreground [&_svg]:size-3"
           disabled={disabled}
           onClick={() => nudge(-1)}
           size="icon-xs"
