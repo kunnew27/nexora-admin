@@ -1,75 +1,79 @@
-# React + TypeScript + Vite
+# Nexora Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, minimalist admin dashboard built with **React 19**, **Vite**, **Tailwind CSS v4**, and **shadcn/ui (Base UI)**.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **Authentication** — login flow with route guards (`AdminLayout` requires auth, `AuthLayout` is guest-only), persisted with Zustand
+- **Dashboard** — stats, sales area chart (Recharts), and recent invoices
+- **Reusable DataTable** — client-side search, sortable columns, pagination, sticky header, viewport-fitted scrolling; plus a server-side variant (`ServerDataTable`) with debounced search, skeleton loading, and error retry
+- **Users management** — create/edit via a right-side drawer with **Zod validation**, delete with a confirmation dialog, and **sonner toasts** for every action
+- **Command palette (⌘K)** — quick navigation from anywhere, frosted-glass styling
+- **Notifications** — header bell with unread badge, mark-read / mark-all-read
+- **Theming** — Light / Dark / System switcher, persisted across reloads
+- **Settings** — tabbed toolbar (Profile / Security / Notifications) with toggle panels
+- **Full-width shell** — sidebar layout with route-aware breadcrumbs and active states
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Tool | Purpose |
+|------|---------|
+| [React 19](https://react.dev) + [Vite 8](https://vite.dev) | UI & build tooling |
+| [Tailwind CSS v4](https://tailwindcss.com) | Styling |
+| [shadcn/ui](https://ui.shadcn.com) (base-nova / Base UI) | Component primitives |
+| [React Router v7](https://reactrouter.com) | Routing & guards |
+| [Zustand 5](https://zustand.docs.pmnd.rs) | State (auth, theme, users, notifications) |
+| [Zod](https://zod.dev) | Form validation |
+| [Recharts](https://recharts.org) | Charts |
+| [sonner](https://sonner.emilkowal.ski) | Toasts |
+| [Husky](https://typicode.github.io/husky) + [commitlint](https://commitlint.js.org) | Git hooks & commit conventions |
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The app runs at `http://localhost:5173`. Log in with any valid email — the demo auth store accepts any credentials.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Other scripts:
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run build    # type-check + production build
+npm run lint     # ESLint
+npm run preview  # preview the production build
+```
+
+## Project Structure
 
 ```
+src/
+├── components/
+│   ├── ui/              # shadcn primitives (button, dialog, sheet, …)
+│   ├── data-table.tsx   # reusable client-side DataTable
+│   ├── data-table-server.tsx
+│   ├── user-form-drawer.tsx
+│   ├── command-palette.tsx
+│   ├── notifications-menu.tsx
+│   └── app-shell.tsx / app-header.tsx / app-sidebar.tsx
+├── layouts/             # AdminLayout (guarded) & AuthLayout (guest)
+├── pages/               # dashboard, users, settings, activity, …
+├── stores/              # Zustand stores (auth, theme, users, …)
+├── lib/                 # validators, utils
+└── routes/              # router configuration
+```
+
+## Git Conventions
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org) and are enforced by Husky + commitlint:
+
+```
+feat(users): add bulk delete
+fix: correct dropdown z-index
+chore: bump dependencies
+```
+
+Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `revert`.
+
+On every commit, the `pre-commit` hook runs `npm run lint`.
