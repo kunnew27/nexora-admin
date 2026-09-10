@@ -218,7 +218,7 @@ function SecurityCard() {
 				</CardDescription>
 			</CardHeader>
 			<CardContent className="space-y-6">
-				<form onSubmit={handlePasswordChange} className="space-y-4">
+				<form noValidate onSubmit={handlePasswordChange} className="space-y-4">
 					<div className="flex items-center gap-2 text-muted-foreground text-sm">
 						<KeyRoundIcon className="size-3.5" />
 						Change password
