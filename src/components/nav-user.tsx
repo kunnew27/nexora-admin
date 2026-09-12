@@ -25,10 +25,12 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuthStore } from "@/stores/auth-store";
+import { useFinancePrefsStore } from "@/stores/finance-prefs-store";
 import { useThemeStore } from "@/stores/theme-store";
 import type { Theme } from "@/stores/theme-store";
+import type { Currency } from "@/lib/finance";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronsUpDownIcon, MonitorIcon, MoonIcon, SunIcon, UserIcon, BellIcon, CreditCardIcon, SettingsIcon, LifeBuoyIcon, LogOutIcon, SunMoonIcon } from "lucide-react";
+import { ChevronsUpDownIcon, CoinsIcon, MonitorIcon, MoonIcon, SunIcon, UserIcon, BellIcon, CreditCardIcon, SettingsIcon, LifeBuoyIcon, LogOutIcon, SunMoonIcon } from "lucide-react";
 
 export function NavUser() {
 	const { isMobile } = useSidebar();
@@ -36,6 +38,8 @@ export function NavUser() {
 	const signOut = useAuthStore((state) => state.signOut);
 	const theme = useThemeStore((state) => state.theme);
 	const setTheme = useThemeStore((state) => state.setTheme);
+	const baseCurrency = useFinancePrefsStore((state) => state.baseCurrency);
+	const setBaseCurrency = useFinancePrefsStore((state) => state.setBaseCurrency);
 	const navigate = useNavigate();
 
 	const handleSignOut = () => {
@@ -87,6 +91,26 @@ export function NavUser() {
 								</DropdownMenuItem>
 							</DropdownMenuGroup>
 							<DropdownMenuSeparator />
+							<DropdownMenuSub>
+								<DropdownMenuSubTrigger>
+									<CoinsIcon
+									/>
+									Base currency
+								</DropdownMenuSubTrigger>
+								<DropdownMenuSubContent className="min-w-36">
+									<DropdownMenuRadioGroup
+										onValueChange={(value) => setBaseCurrency(value as Currency)}
+										value={baseCurrency}
+									>
+										<DropdownMenuRadioItem value="USD">
+											$ USD
+										</DropdownMenuRadioItem>
+										<DropdownMenuRadioItem value="KHR">
+											៛ KHR
+										</DropdownMenuRadioItem>
+									</DropdownMenuRadioGroup>
+								</DropdownMenuSubContent>
+							</DropdownMenuSub>
 							<DropdownMenuSub>
 								<DropdownMenuSubTrigger>
 									<SunMoonIcon

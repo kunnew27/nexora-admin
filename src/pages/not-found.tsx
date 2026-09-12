@@ -12,7 +12,7 @@ export default function NotFoundPage() {
 				<p className="text-muted-foreground text-sm">
 					The page you are looking for doesn&apos;t exist or has been moved.
 				</p>
-				<Button render={<Link to="/dashboard" />}>Back to Dashboard</Button>
+				<Button render={<Link to="/overview" />}>Back to Overview</Button>
 			</div>
 		</main>
 	);

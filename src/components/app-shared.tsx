@@ -1,4 +1,4 @@
-import { LayoutGridIcon, BarChart3Icon, BriefcaseIcon, UsersIcon, UserRoundIcon, PlugIcon, KeyRoundIcon, SettingsIcon, ActivityIcon, HelpCircleIcon, BookOpenIcon, ImageIcon, HashIcon } from "lucide-react";
+import { ChartPieIcon, UserRoundIcon, PlugIcon, KeyRoundIcon, SettingsIcon, ActivityIcon, HelpCircleIcon, BookOpenIcon, ImageIcon, HashIcon, WalletIcon, ArrowLeftRightIcon, LandmarkIcon, PiggyBankIcon, TargetIcon, HandCoinsIcon, TagsIcon } from "lucide-react";
 
 export type SidebarNavItem = {
 	title: string;
@@ -14,39 +14,47 @@ export type SidebarNavGroup = {
 
 export const navGroups: SidebarNavGroup[] = [
 	{
-		label: "Product",
+		label: "Finance",
 		items: [
 			{
-				title: "Dashboard",
-				url: "/dashboard",
-				icon: (
-					<LayoutGridIcon
-					/>
-				),
+				title: "Overview",
+				url: "/overview",
+				icon: <WalletIcon />,
 			},
 			{
-				title: "Analytics",
-				url: "/analytics",
-				icon: (
-					<BarChart3Icon
-					/>
-				),
+				title: "Reports",
+				url: "/reports",
+				icon: <ChartPieIcon />,
 			},
 			{
-				title: "Projects",
-				url: "/projects",
-				icon: (
-					<BriefcaseIcon
-					/>
-				),
+				title: "Transactions",
+				url: "/transactions",
+				icon: <ArrowLeftRightIcon />,
 			},
 			{
-				title: "Team",
-				url: "/team",
-				icon: (
-					<UsersIcon
-					/>
-				),
+				title: "Accounts",
+				url: "/accounts",
+				icon: <LandmarkIcon />,
+			},
+			{
+				title: "Budgets",
+				url: "/budgets",
+				icon: <PiggyBankIcon />,
+			},
+			{
+				title: "Goals",
+				url: "/goals",
+				icon: <TargetIcon />,
+			},
+			{
+				title: "Debts",
+				url: "/debts",
+				icon: <HandCoinsIcon />,
+			},
+			{
+				title: "Categories",
+				url: "/categories",
+				icon: <TagsIcon />,
 			},
 			{
 				title: "Users",

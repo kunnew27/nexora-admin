@@ -13,6 +13,15 @@ import UsersPage from "@/pages/users";
 import BillingPage from "@/pages/billing";
 import ImageViewerPage from "@/pages/image-viewer";
 import NumberInputPage from "@/pages/number-input";
+import FinanceOverviewPage from "@/pages/finance";
+import FinanceTransactionsPage from "@/pages/finance/transactions";
+import FinanceAccountsPage from "@/pages/finance/accounts";
+import FinanceBudgetsPage from "@/pages/finance/budgets";
+import FinanceGoalsPage from "@/pages/finance/goals";
+import FinanceDebtsPage from "@/pages/finance/debts";
+import FinanceCategoriesPage from "@/pages/finance/categories";
+import ReportsPage from "@/pages/reports";
+import IncomeReportPage from "@/pages/reports/income";
 import LoginPage from "@/pages/auth/login";
 import NotFoundPage from "@/pages/not-found";
 
@@ -20,7 +29,7 @@ export const router = createBrowserRouter([
   {
     element: <AdminLayout />,
     children: [
-      { index: true, element: <Navigate to="/dashboard" replace /> },
+      { index: true, element: <Navigate to="/overview" replace /> },
       { path: "dashboard", element: <DashboardPage /> },
       { path: "analytics", element: <AnalyticsPage /> },
       { path: "projects", element: <ProjectsPage /> },
@@ -33,6 +42,15 @@ export const router = createBrowserRouter([
       { path: "billing", element: <BillingPage /> },
       { path: "image-viewer", element: <ImageViewerPage /> },
       { path: "number-input", element: <NumberInputPage /> },
+      { path: "overview", element: <FinanceOverviewPage /> },
+      { path: "transactions", element: <FinanceTransactionsPage /> },
+      { path: "accounts", element: <FinanceAccountsPage /> },
+      { path: "budgets", element: <FinanceBudgetsPage /> },
+      { path: "goals", element: <FinanceGoalsPage /> },
+      { path: "debts", element: <FinanceDebtsPage /> },
+      { path: "categories", element: <FinanceCategoriesPage /> },
+      { path: "reports", element: <ReportsPage /> },
+      { path: "reports/income", element: <IncomeReportPage /> },
     ],
   },
   {

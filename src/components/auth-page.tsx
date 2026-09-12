@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +29,7 @@ export function AuthPage() {
 			email: email.trim() || "alex@example.com",
 			avatar: "https://github.com/shabanhr.png",
 		});
-		navigate("/dashboard");
+		navigate("/overview");
 	};
 
 	return (
@@ -64,19 +63,9 @@ export function AuthPage() {
 				<p className="pt-3 text-muted-foreground/40">—</p>
 			</div>
 
-			{/* Brand */}
-			<div className="absolute top-8 left-10 hidden text-slate-900 lg:block">
-				<Logo className="h-4" />
-				<span className="sr-only">Efferd</span>
-			</div>
-
 			{/* Card */}
 			<div className="relative z-10 w-full max-w-md rounded-2xl border bg-card px-8 py-10 shadow-[0_12px_40px_-8px_rgb(15,23,42,0.12)] sm:px-10">
 				<div className="flex flex-col items-center space-y-6 text-center">
-					<div className="text-slate-900">
-						<Logo className="h-5" />
-						<span className="sr-only">Efferd</span>
-					</div>
 					<div className="space-y-2">
 						<h1 className="font-bold text-3xl tracking-tight">Welcome back</h1>
 						<p className="text-muted-foreground text-sm leading-relaxed">
@@ -180,7 +169,7 @@ export function AuthPage() {
 
 			{/* Footer */}
 			<footer className="absolute inset-x-0 bottom-0 hidden items-center justify-between px-10 py-6 text-muted-foreground/60 text-xs sm:flex">
-				<p>© 2026 Efferd. All rights reserved.</p>
+				<p>© 2026. All rights reserved.</p>
 				<div className="flex items-center gap-6">
 					{["Privacy", "Terms", "Support"].map((label) => (
 						<a

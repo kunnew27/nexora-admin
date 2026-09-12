@@ -85,7 +85,9 @@ export function rielToUsd(riel: number, rate = DEFAULT_USD_KHR_RATE) {
  * Uses NumberParser because Intl cannot read localized digits.
  */
 export function parseRiel(input: string): number | null {
-  const parsed = khmerParser.parse(toLatinDigits(input.replace(/៛/g, "").trim()));
+  const parsed = khmerParser.parse(
+    toLatinDigits(input.replace(/៛/g, "").trim()),
+  );
   if (Number.isNaN(parsed)) return null;
   return Math.trunc(parsed);
 }

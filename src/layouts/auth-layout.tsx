@@ -8,7 +8,7 @@ export default function AuthLayout() {
 	if (isAuthenticated) {
 		const from =
 			(location.state as { from?: { pathname: string } } | null)?.from?.pathname ??
-			"/dashboard";
+			"/overview";
 		return <Navigate to={from} replace />;
 	}
 

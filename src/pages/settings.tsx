@@ -22,13 +22,35 @@ import {
 	AvatarImage,
 } from "@/components/ui/avatar";
 import { useAuthStore } from "@/stores/auth-store";
+import {
+	DEFAULT_RATE_TO_KHR,
+	useFinancePrefsStore,
+} from "@/stores/finance-prefs-store";
+import {
+	CURRENCIES,
+	type Currency,
+	formatMoney,
+} from "@/lib/finance";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { CheckIcon, KeyRoundIcon, ShieldCheckIcon } from "lucide-react";
+import {
+	ArrowLeftRightIcon,
+	CheckIcon,
+	KeyRoundIcon,
+	ShieldCheckIcon,
+} from "lucide-react";
 
 const tabs = [
 	{ id: "profile", label: "Profile" },
 	{ id: "security", label: "Security" },
 	{ id: "notifications", label: "Notifications" },
+	{ id: "exchange-rate", label: "Exchange rate" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -40,7 +62,7 @@ export default function SettingsPage() {
 		<div className="flex h-full min-h-0 flex-col">
 			<PageHeader
 				title="Settings"
-				description="Manage your profile, security, and notification preferences."
+				description="Manage your profile, security, notifications, and exchange rate."
 			/>
 
 			{/* Tab toolbar below the header */}
@@ -73,6 +95,7 @@ export default function SettingsPage() {
 					{tab === "profile" && <ProfileCard />}
 					{tab === "security" && <SecurityCard />}
 					{tab === "notifications" && <NotificationsPanel />}
+					{tab === "exchange-rate" && <ExchangeRateCard />}
 				</div>
 			</div>
 		</div>
@@ -82,6 +105,8 @@ export default function SettingsPage() {
 function ProfileCard() {
 	const user = useAuthStore((state) => state.user);
 	const updateUser = useAuthStore((state) => state.updateUser);
+	const baseCurrency = useFinancePrefsStore((state) => state.baseCurrency);
+	const setBaseCurrency = useFinancePrefsStore((state) => state.setBaseCurrency);
 
 	const [name, setName] = useState(user?.name ?? "");
 	const [email, setEmail] = useState(user?.email ?? "");
@@ -102,20 +127,43 @@ function ProfileCard() {
 					This information appears on your profile and invoices.
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="space-y-6">
-				<div className="flex items-center gap-4">
-					<Avatar className="size-14">
-						{user?.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
-						<AvatarFallback className="text-lg">
-							{(user?.name ?? "U").charAt(0).toUpperCase()}
-						</AvatarFallback>
-					</Avatar>
-					<div className="space-y-1">
-						<p className="font-medium text-sm">{user?.name ?? "Guest"}</p>
-						<p className="text-muted-foreground text-xs">{user?.email}</p>
+				<CardContent className="space-y-6">
+					<div className="flex items-center gap-4">
+						<Avatar className="size-14">
+							{user?.avatar && <AvatarImage src={user.avatar} alt={user.name} />}
+							<AvatarFallback className="text-lg">
+								{(user?.name ?? "U").charAt(0).toUpperCase()}
+							</AvatarFallback>
+						</Avatar>
+						<div className="space-y-1">
+							<p className="font-medium text-sm">{user?.name ?? "Guest"}</p>
+							<p className="text-muted-foreground text-xs">{user?.email}</p>
+						</div>
 					</div>
-				</div>
-				<Separator />
+					<Separator />
+					<div className="space-y-2">
+						<Label htmlFor="settings-base-currency">Base currency</Label>
+						<Select
+							onValueChange={(value) => setBaseCurrency(value as Currency)}
+							value={baseCurrency}
+						>
+							<SelectTrigger className="w-full" id="settings-base-currency">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								{CURRENCIES.map((currency) => (
+									<SelectItem key={currency} value={currency}>
+										{currency === "USD" ? "$ USD" : "៛ KHR"}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+						<p className="text-muted-foreground text-xs">
+							Applies immediately across the app. Stored amounts are never
+							rewritten — only the display changes.
+						</p>
+					</div>
+					<Separator />
 				<form id="profile-form" onSubmit={handleSave} className="space-y-4">
 					<div className="space-y-2">
 						<Label htmlFor="settings-name">Full name</Label>
@@ -290,6 +338,98 @@ function SecurityCard() {
 						onCheckedChange={(checked) => setTwoFactor(Boolean(checked))}
 					/>
 				</div>
+			</CardContent>
+		</Card>
+	);
+}
+
+function ExchangeRateCard() {
+	const exchangeRate = useFinancePrefsStore((state) => state.exchangeRate);
+	const setExchangeRate = useFinancePrefsStore((state) => state.setExchangeRate);
+
+	const [rateInput, setRateInput] = useState(String(exchangeRate));
+	const [error, setError] = useState<string>();
+	const [saved, setSaved] = useState(false);
+
+	const parsed = Number(rateInput);
+	const dirty = Number.isFinite(parsed) && parsed !== exchangeRate;
+
+	const handleSave = (event: FormEvent) => {
+		event.preventDefault();
+		if (!Number.isFinite(parsed) || parsed < 100 || parsed > 1_000_000) {
+			setError("Enter a realistic rate between 100 and 1,000,000 KHR per USD.");
+			return;
+		}
+		setError(undefined);
+		setExchangeRate(parsed);
+		setSaved(true);
+		window.setTimeout(() => setSaved(false), 2000);
+	};
+
+	return (
+		<Card>
+			<CardHeader>
+				<CardTitle className="flex items-center gap-2">
+					<ArrowLeftRightIcon className="size-4 text-muted-foreground" />
+					Exchange rate
+				</CardTitle>
+				<CardDescription>
+					Snapshot used to convert between USD and KHR. Changing it only affects
+					what the UI shows — stored transactions keep their original amounts.
+				</CardDescription>
+			</CardHeader>
+			<CardContent className="space-y-6">
+				<div className="flex items-center justify-between gap-4 rounded-lg border bg-muted/40 px-4 py-3">
+					<span className="text-muted-foreground text-sm">Current rate</span>
+					<span className="font-medium text-sm tabular-nums">
+						$1 = {formatMoney(exchangeRate, "KHR")}
+					</span>
+				</div>
+				<form noValidate onSubmit={handleSave} className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="settings-exchange-rate">KHR per 1 USD</Label>
+						<Input
+							aria-invalid={Boolean(error)}
+							id="settings-exchange-rate"
+							inputMode="decimal"
+							type="number"
+							value={rateInput}
+							onChange={(event) => setRateInput(event.target.value)}
+							min={100}
+							max={1000000}
+							step="any"
+							required
+						/>
+						{error && <p className="text-destructive text-xs">{error}</p>}
+						<p className="text-muted-foreground text-xs">
+							Examples: {formatMoney(10000, "USD")} ≈{" "}
+							{formatMoney(10000 * (Number(rateInput) || 0), "KHR")} ·{" "}
+							{formatMoney(4100 * 10, "KHR")} ≈{" "}
+							{formatMoney(41000 / (Number(rateInput) || 1), "USD")}
+						</p>
+					</div>
+					<div className="flex justify-end gap-2">
+						<Button
+							disabled={!dirty}
+							onClick={() => setRateInput(String(DEFAULT_RATE_TO_KHR))}
+							size="sm"
+							type="button"
+							variant="ghost"
+						>
+							Reset to demo
+						</Button>
+						<Button disabled={!dirty || saved} size="sm" type="submit">
+							{saved ? (
+								<>
+									<CheckIcon data-icon="inline-start" />
+									Saved
+								</>
+							) : (
+								"Update rate"
+							)}
+						</Button>
+					</div>
+				</form>
 			</CardContent>
 		</Card>
 	);
